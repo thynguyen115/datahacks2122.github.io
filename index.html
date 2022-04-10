@@ -1,0 +1,268 @@
+<html>  
+<head>  
+<script type="text/javascript" src="app.js">
+    </script>  
+<link rel="stylesheet" href="styles.css">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+</head>
+<body onload=dataHacks()> 
+
+<div id="navbar">
+  <a href="#default" id="logo">DataHacks 21-22</a>
+  <div id="navbar-right">
+    <a class=active href="#section">Home</a>
+    <a class=active href="#section1">Introduction</a>
+    <a class=active href="#section2">Data Cleaning</a>
+    <a class=active href="#section3">EDA</a>
+    <a class=active href="#section4">Feature Engineering</a>
+    <a class=active href="#section5">Model Building</a>
+    <a class=active href="#section6">Model Testing</a>
+    <a class=active href="#section7">Conclusion/Improvements</a>
+  </div>
+</div>
+
+<div class=outer_div>
+	<div id="section" style="background-color: darkblue; text-align: center; font-family: sans-serif; color: white;">
+		<h2>DataHacks 21-22 
+		<br> Shark Tank - How Pitch Descriptions Make or Break the Deals
+		<br><a href="https://github.com/thynguyen115" style="font-weight: normal; font-size: 20; color: white">Thy Nguyen</a>
+		</h2>
+	</div>
+
+	<h2><u>Section 1</u>: Introduction</h2>
+	<div id=section1>
+		Shark Tank is a famous TV show that allows potential entrepreneurs to introduce their companies/products and get invested by the investors (aka "sharks").
+		<br>In our DataHacks this year, we are asked to predict whether or not a deal was made between a pitched business and the investors by using the description of the pitched businesses.
+		<br>
+		To accomplish that goal, we are given two datasets, which allow us to access 530 rows and 5 columns of the train set as well as 176 rows and 3 columns of the test set. 
+		<br><br>
+		In particular, the columns of the train set are:
+		<li><strong>Season_Epi_code</strong>(data type: int64, categorical-ordinal data) is a code to denote the pair of season and episode when the pitch occured. The datasets consist of 8 seasons of Shark Tank (in the US), and the Season_Epi_code is under the format of SEE. For instance, 115 means 1<sup>st</sup> season - 15<sup>th</sup> episode, 803 = 8<sup>th</sup> season - 3<sup>rd</sup> episode)
+		<li><strong>Pitched_Business_Identifier</strong>(data type: str, categorical-nominal data) is an abbreviation of the pitched business</li>
+		<li><strong>Pitched_Business_Desc</strong>(data type: str, categorical-nominal data) briefly describes the business and their products </li>
+		<li><strong>Deal_Status</strong>(data type: int64, categorical-ordinal data) is the status of whether the pitched business got a deal or not, with two outcomes: 1 = "YES, the deal was made", 0 = "NO, the deal was not made" </li>
+		<li><strong>Deal_Shark</strong>(data type (except for null values): str, categorical-nominal data) - "Which of the most common sharks agreed on the episode along with the presenters for a deal?" For example, here is a list of deal sharks listed in the corresponding column: BC - Barbara Corcoran, DJ - Daymond John, KOL - Kevin O'Leary, LG - Lori Greiner, MC - Mark Cuban, RH - Robert Herjavec.</li>
+		<br>
+
+		<div id="dataset_picture" style="margin-left:100; padding:50">
+			<img src="assets/trainset.png" width="1000" height="250" alt="Train Set Header">
+			<p style="margin-left:400"><strong><u>Figure 1</u></strong>: Trainset Header</p>
+			<br><br>
+		</div>
+
+		On the other hand, the test set only has 3 columns: 
+		<ul><strong>Season_Epi_code</strong></ul> <ul><strong>Pitched_Business_Identifier</ul></strong> <ul><strong>Pitched_Business_Desc</strong></ul>whose descriptions are shown above
+		<div id="dataset_picture" style="margin-left:250; padding:50"> 
+			<img src="assets/testset.png" width="700" height="200" alt="Test Set Header">
+			<p style="margin-left:250"><strong><u>Figure 2</u></strong>: Testset Header</p>
+		</div>
+	</div>
+
+	<h2><u>Section 2</u>: Data Cleaning / Pre-processing</h2>
+	<div id=section2>
+		When conducting data cleaning and pre-processing, we have to take care of duplicates, irrelevant observations, missing data, inconsistent ways of recording data, and unexpected outliers.
+		<br>
+		<li> For our training data set, all 530 observations are distinct, so we need not handle duplicates in this case. </li>
+		<li> We also observe that, except for the last column ("Deal_Shark"), there is no null value in the first 4 columns of the trainset.
+		Furthermore, as specified in the prompt, the Deal_Shark column will not be used to predict the Deal_Status due to collinearity. Hence, we choose to drop this column out of our trainset.</li>
+		<li> Similarly, we notice that the input variables of the test set are unique and non-null. Hence, we find no duplicates and zero missing data</li>
+		<li> Additionally, both datasets are recorded in a consistent format: In particular, the data type in each column is consistent throughout the datasets.</li>
+		<li> However, there exist some special characters in the Pitched_Business_Desc column, namely \xa0 or A^, so we use regex to remove those non-alphanumeric and non-space characters / words.
+		<br>
+		Overall, to clean our data, we drop the "Deal_Shark" column and preprocess the Pitched_Business_Desc text.
+
+		<br>
+		<br>
+		In the later section, we will have a chance to dive into how we split the given traindata into train sets and test sets.
+		<div id="dataset_picture" style="margin-left:170; padding:50"> 
+			<img src="assets/traindata_afterpreprocess.png" width="900" height="200" alt="Train data after preprocessing">
+			<p style="margin-left:250"><strong><u>Figure 3</u></strong>: Train Data Header after Preprocessing</p>
+		</div>
+	</div>
+
+	<h2><u>Section 3</u>: Exploratory Data Analysis</h2>
+	<div id=section3>
+		In general, for each pair of season and episode,  there are up to 5 pitched businesses. 
+		<br> The most common number of pitched businesses per season-episode is 3; the next common one is 4,
+		and the least common one is 5. 
+		<br> Only Season 1-Episode 6 had 5 pitched businesses participated at the same time.
+		<div id="EDA" style="margin-left:300; padding:50"> 
+			<img src="assets/EDA_hist.png" width="500" height="300" alt="EDA">
+			<p style="margin-left:5"><strong><u>Figure 4</u></strong>: Histogram of the Number of Pitched Businesses per Season-Episode</p>
+		</div>
+
+
+		Besides, as our label is the "Deal_Status" column, we should also pay more attention to it.
+		<br>
+		Specifically, in the trainset, the number of deals made is 283, which is 12.7% greater than the number of no deals.
+		<br>
+		Such a difference is not drastically large; however, it might lead to the overfitting issue when we build our classification model in the later section.
+		<br>
+		Thus, we need to handle data with thorough care when splitting the train data into sub-train and sub-test data sets.
+		<div id="EDA" style="margin-left:350; padding:50"> 
+			<img src="assets/EDA_dealprop.png" width="500" height="200" alt="EDA">
+			<p style="margin-left:30"><strong><u>Figure 5</u></strong>: Proportion of Deal=YES over Deal=NO</p>
+		</div>
+
+		Also, one might wonder if the even or odd episode affects the decision of the investors.
+		<br>
+		Unfortunately, this factor does not contribute much to our process of classifying deal status.
+		<br>
+		In fact, the proportions of deals that were/were not made in an even episode are relatively similar to such proportions in an odd episode.
+		<br>
+		On average, the proportion of "YES" deals is approximately 53%, and the proportioon of "NO" deals is 47%.
+
+		<div id="EDA" style="margin-left:300; padding:50"> 
+			<img src="assets/EDA_stack.png" width="500" height="400" alt="EDA">
+			<p style="margin-left:20"><strong><u>Figure 6</u></strong>: The Number of Deal Made and No Deal in an Even or Odd Episode</p>
+		</div>
+
+		Now, we take a look at the p-values of the Chi-test that assesses the correlation between every 2 categorical variables.
+		<div id="EDA" style="margin-left:30; padding:50"> 
+			<img src="assets/EDA_pval.png" width="900" height="200" alt="EDA">
+			<p style="margin-left:160"><strong><u>Figure 7</u></strong>: The P-values of Chi-test when Testing the Correlation between 2 Categorical Vairables</p>
+		</div>
+		Before we jump into conclusion of this Chi-square test, let's define the null and alternative hypotheses.
+		<br>
+		H0: There is no correlation between 2 variables.
+		<br>
+		H1: There is a correlation between 2 variables.
+		<br>
+		Let's the level of significance be alpha = 0.05. We will reject the null hypothesis if the p-value < 0.05, and conclude that our test favors the alternative hypothesis.
+		<br>
+		As shown in the above table, all the non-null entries are above 0.05. Hence, we fail to reject the null hypothesis. 
+		<br>  We conclude that our traindata did not provide sufficient evidence to favor the alternative hypothesis, 
+		<br> and that also means the data supports H0 which states: "There is no correlation between every two categorical variables".
+		<div id="EDA" style="margin-left:200; padding:50;"> 
+			<img src="assets/EDA_heat.png" width="500" height="400" alt="EDA">
+			<p style="margin-left:80"><strong><u>Figure 8</u></strong>: Heatmap Showing P-values of Chi-test of Correlation</p>
+		</div>
+
+		Overall, from the above EDA, we conclude that the Season_Epi_code is not a good predictor for the Deal_Status.
+		<br>
+		As a result, we are left with "Pitched_Business_Identifier" and "Pitched_Business_Desc" to classify the labels of deals.
+		<br>
+		Comparing those two attributes, we see that the "Pitched_Business_Identifier" is not descriptive enough,
+		<br>
+		and we have little to no clue about how we can turn it into a good predictive variable.
+		<br>
+		Thus, we finally choose "Pitched_Business_Desc" as our input varible of the classification model.	 
+	</div>
+
+	<h2><u>Section 4</u>: Feature Engineering</h2>
+	<div id=section4>
+		<li>In the feature engineering process, we might want to remove the stopwords of the "Pitched_Business_Desc" column.
+		<br>
+		The reason is that stopwords are so common that they do not achieve a high value of TF-IDF and are not good at indicating 
+		the importance or relevance of a string representation.
+		<br>
+		Some stopwords that we frequently see in our daily life are "a", "the", "of", "in", etc. </li>
+		<br>
+		<li> Note that, before removing stopwords, we should turn all words into lowercase as we might encounter the situation where
+		the stopword corpus of NLTK only include the lowercase version of the same word. For instance, NLTK stopword corpus only
+		has "the" instead of "The".</li>
+		<br>
+		<li>Next, we'll normalize the corpus by a technique called 
+			<a href="https://www.analyticsvidhya.com/blog/2015/10/6-practices-enhance-performance-text-classification-model/">Lemmatization</a>.
+		<br> In particular, for words that are related to one another, namely, "use", "uses", "used", "using", and "user", we only need to
+		normalize them and keep the word "use" as far as the classifier concerns. The reason is redundancy does not help our classifier,
+		so we should keep a single word among a dozen of its variations.</li>
+		<br>
+		<li>Besides, we use CountVectorizer and TfidfTransformer to transform the input data and enable them to work with Sklearn Classifiers.
+		<br> In particular, CountVectorizer converts the input text into a sparse matrix of token counts. By default, the number of features
+		will be equivalent to the vocabulary size found by data analysis.
+		<div id="FeatEng" style="margin-left:400; padding:50;"> 
+			<img src="assets/FeatEng_sparseMT.png" width="500" height="150" alt="sparse MT">
+			<p style="margin-left:40"><strong><u>Figure 9</u></strong>: Sparse Matrix after CountVectorizer on the Whole Trainset</p>
+		</div>
+		</li>
+		<li>
+		On the other hand, TfidfTransformer transforms the count matrix obtained from CountVectorizer into a nornalized matrix of tf
+		or tf-idf representation. 
+		<br> In our case, we exclude the use of idf (i.e. set idf(t) = 1, and tf_idf(t, d) = tf(t, d) * idf(t) = tf(t, d)).
+		<br> The reason is that we do not want rare terms to weigh more heavily than the other frequent terms. In fact, the rare terms in Pitched_Business_Desc
+		may come from the company names themselves, and such "rare terms" are not the indicators of whether or not the investors will sponsor those
+		pitched businesses.
+		<div id="FeatEng" style="margin-left:200; padding:50;"> 
+			<img src="assets/FeatEng_tfidf.png" width="800" height="280" alt="TF-IDF">
+			<p style="margin-left:250"><strong><u>Figure 10</u></strong>: Sparse Matrix after TfidfTransformer</p>
+		</div>
+		</li>
+	</div>
+
+	<h2><u>Section 5</u>: Model Building</h2>
+	<div id=section5>
+		Since we cannot access the testset while training data, we split the trainset into smaller train and test sets (70% train / 30% test).
+		<br>
+		We'll train our model by using 4 classifiers (Decision Tree, Stochastic Gradient Descent, Multinomial Naive Bayes, and K-Nearest Neighbors).
+		<br>
+
+		<br>
+		After that, we compare those models and pick the optimal choice.
+		<div id="ModelBuilding" style="margin-left:400; padding:50;"> 
+			<img src="assets/ModelBuilding_train.png" width="400" height="600" alt="TF-IDF">
+			<p style="margin-left:100"><strong><u>Figure 11</u></strong>: Model Comparisons</p>
+		</div>
+		To summarize:
+		<li>As shown in the above table, we observe that the Decision Tree Classifier experiences overfitting with 100% train accuracy but only 51% test accuracy.
+		<br> This is nothing more than a coin flip, so we stop considering this model in future usage. </li>
+		<br>
+		<li>Additionally, the remaining models seem not to suffer much from overfitting. Their train and test accuracies as well as F1-scores do not vary much from one another.</li>
+		<br>
+		<li>Compared to SGD and Multinomial Naive Bayes, K-Nearest Neighbor achieves the best train and test accuracies. 
+			<br> Its F1-scores are better than SGD classifier,
+		and even though the F1-scores of KNN do not beat those of Multinomial Naive Bayes, the differences are not significant. </li>
+		<br>
+		Overall, we pick KNN Classifer over the other three choices.
+		<br>
+		<br>
+		<strong>Advantages and Disadvantages of KNN:</strong>
+		<br>
+		<li>KNN is relatively simple to implement and easy to understand. 
+		<br> Being an instance-based approach, KNN quickly adapts to new training data, which avoids long training period. </li>
+		<br><li>Some drawbacks of KNN are that it does not work well with large dataset, high dimensional or noisy data.
+			<br> Fortunately,
+			our datasets are not drastically large (530 observations from the original trainset and around 170 observations from the testset),
+			<br> and we do not have high dimensional or noisy data. Hence, we can consider using it in the testing process.
+		</li>
+		
+	</div>
+
+	<h2><u>Section 6</u>: Model Testing - Evaluation Metrics, Analysis, and Results</h2>
+	<div id=section6>
+		After choosing KNN as our classifier, we use the whole given trainset to train the model again and output the results.
+		<br> (Note: the predictions are stored in a csv file, which has 2 columns ("Pitched_Business_Desc" and "predictions"))
+		<br> 
+		<br> <strong>Evaluation Metrics on the Trainset</strong>
+		<br> <li>Train Accuracy: approx. 64%</li>
+		<li>F1 Score: approx. 0.692</li>
+		<br>
+		<strong>Analysis</strong>
+		<br> <li>The model performs better than a coin flip, and we expect that the final testing result should be around this range of accuracy.</li>
+		<li>Similarly, the F1-score is close to 0.7, and we expect that the test F1-score does not vary much from this training score. </li>
+		<br>
+		<strong>Result</strong>
+		<br> <li>Please check out the csv file to have more information.</li>
+	
+	</div>
+
+	<h2><u>Section 7</u>: Conclusion / Future Improvements</h2>
+	<div id=section7>
+		<li>Our goal for this study is to classify the label of a pitched business and see whether or not that business was able to make a deal during their
+		<br>participation in the TV show Shark Tank.</li>
+		<br> <li>We've started our project by introducing the given datasets, cleaning data, conducting EDA and feature engineering, <br>then building and testing the classification model.</li>
+		<br> <li>After cleaning data by dropping the unnecessary column as well as removing stopwords and lemmatization, we've utilized CountVectorizer <br> and TfidfVectorizer to transform our data before building the classifier.</li>
+		<br> <li>Four classifiers we've used are Decision Tree, SGD, Multinominal Naive Bayes, and KNN. Among them, KNN gave <br> the best possible result during this intense 24-hour DataHacks, whereas Decision Tree classifier suffers from overfitting.</li>
+		<br> <li>With that conclusion, we will suggest some future improvements for our project. For instance, we can use Grid-search Cross-Validation <br>
+		to find the optimal combinations of parameters that are used in KNN model, or we can consider other advanced techniques such as 
+		<br> deep learning, LSTM, RNN, and so on.</li>
+	</div>
+	<br>
+	<h2>Thank you for your time!</h2>
+	<a href="https://github.com/thynguyen115" style="font-weight: normal; font-size: 20; color: blue;">Thy Nguyen</a>
+
+</div>
+   
+</body>  
+</html> 
